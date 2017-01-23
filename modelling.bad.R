@@ -63,6 +63,8 @@ if (1) {
   unbalanced.train.data <- sel.data[loan.id %in% sel.ids]
   unbalanced.test.data <- sel.data[!loan.id %in% sel.ids]
   
+  write.table(unbalanced.test.data[, .(loan.id, status.str)], "data/bad.data.test.tsv", sep="\t", row.names = F)
+  
   train.data <- balance.data(unbalanced.train.data)
   test.data <-  balance.data(unbalanced.test.data)
   balanced.data <- rbind(train.data, test.data)
@@ -71,7 +73,7 @@ if (1) {
 
 ######################################################################################
 # importance analysis with RF
-if (1) {
+if (0) {
   # prepare features
   all.features <- names(sel.data)
   non.predictors <- c("loan.id", "Purpose", "Purpose.improved", "Term", "Home.Ownership"
@@ -106,7 +108,7 @@ if (1) {
 }
 
 # importance analysis with XGBoost
-if (1) {
+if (0) {
   # prepare features
   all.features <- names(balanced.data)
   non.predictors <- c("loan.id", "Purpose", "Purpose.improved", "Term", "Home.Ownership"
@@ -157,49 +159,38 @@ if (1) {
 if (1) {
   output.features <- "status"
   
-  # selected features with important analysis
-  selected.features <- dt.imp$feature[1:5]
-  selected.features <- dt.xgb.imp$Feature[1:10]
-  
   # a subset ad-hoc features
-  selected.features <- c("credit.score"
-                         , "Term.num"
-                         , "amount.to.income"
-                         , "Rent.Long.Term.num"
-                         , "debt.to.income"
-                         , "current.to.max.credit"
-                         , "debt.to.Max.Credit"
-                         , "amount.fix"
+  selected.features.bare <- c("current.to.max.credit"
+                            , "debt.Term"
+                            , "amount.Term"
+                            , "current.to.max.credit.Term"
+                            , "amount.to.max.credit.Term"
+                            , "amount.to.credit.history.Term"
+                            , "amount.to.n.accounts.Term"
+                            , "amount.to.credit.history"
   )
-  # another set of ad-hoc features
-  selected.features <- c(  "current.to.max.credit"
-                          ,"debt.Term"
-                          ,"amount.Term"
-                          ,"current.to.max.credit.Term"
-                          ,"amount.to.max.credit.Term"
-                          ,"amount.to.credit.history.Term"
-                          ,"amount.to.n.accounts.Term"
-                          , "amount.to.credit.history"
-                          , "Mort.Short.Term.num", "Rent.Long.Term.num"
-  )
+  selected.features <- c(selected.features.bare, "Mort.Short.Term.num", "Rent.Long.Term.num")
   
-  g1 <- ggplot(sel.data, aes_string(selected.features[1], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 40, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g2 <- ggplot(sel.data, aes_string(selected.features[2], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g3 <- ggplot(sel.data, aes_string(selected.features[3], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g4 <- ggplot(sel.data, aes_string(selected.features[4], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g5 <- ggplot(sel.data, aes_string(selected.features[5], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g6 <- ggplot(sel.data, aes_string(selected.features[6], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g7 <- ggplot(sel.data, aes_string(selected.features[7], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  g8 <- ggplot(sel.data, aes_string(selected.features[8], fill="status.fctr")) + 
-    geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
-  multiplot(g1, g2, g3, g4, g5, g6, g7, g8, cols = 3)
+  
+  if (0) {
+    g1 <- ggplot(sel.data, aes_string(selected.features[1], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 40, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g2 <- ggplot(sel.data, aes_string(selected.features[2], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g3 <- ggplot(sel.data, aes_string(selected.features[3], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g4 <- ggplot(sel.data, aes_string(selected.features[4], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g5 <- ggplot(sel.data, aes_string(selected.features[5], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g6 <- ggplot(sel.data, aes_string(selected.features[6], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g7 <- ggplot(sel.data, aes_string(selected.features[7], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    g8 <- ggplot(sel.data, aes_string(selected.features[8], fill="status.fctr")) + 
+      geom_histogram(aes(y=..density..), bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+    multiplot(g1, g2, g3, g4, g5, g6, g7, g8, cols = 3)
+  }
   
   # formulate model
   the.model.fmla <- as.formula(paste(paste(output.features, collapse="+"), paste(selected.features, collapse="+"), sep="~"))
@@ -220,14 +211,13 @@ if (1) {
 # RF predictor
 if (1) {
   # set hyper-parameters
-  the.ntree <- 1000
+  the.ntree <- 10000
   the.nodesize <- 25
   
-  # training
-  system.time( the.rf.model <- randomForest(formula = the.model.fmla, data = d.train, 
-                                            ntree = the.ntree, nodesize = the.nodesize, importance = F))
+  # training model
+  system.time( the.rf.model <- randomForest(formula = the.model.fmla, data = d.train, ntree = the.ntree, nodesize = the.nodesize, importance = F))
   
-  # testing
+  # testing model
   d.train$prediction.rf <- predict(the.rf.model, d.train)
   d.test$prediction.rf <- predict(the.rf.model, d.test)
   d.test.all$prediction.rf <- predict(the.rf.model, d.test.all)
@@ -257,33 +247,17 @@ if (1) {
 # SVM regression predictor
 if (1) {
   # train model
+  rand.seed <- 1234
+  set.seed(rand.seed)
   system.time(the.svm.model <- svm(formula = the.model.fmla, data = d.train, cost = 1, gamma = 0.5))
+  
   # testing model
   d.train$prediction.svm <- predict(the.svm.model, d.train)
   d.test$prediction.svm <- predict(the.svm.model, d.test)
   d.test.all$prediction.svm <- predict(the.svm.model, d.test.all)
   acc.estimation.balanced <- acc.curve(d.test, "prediction.svm")
   acc.estimation.unbalanced <- acc.curve(d.test.all, "prediction.svm")
-  
-  
-  # optimize SVM hyper-parameters
-  if (0) {
-    svm_tune <- tune(svm, the.model.fmla, data = d.train, 
-                     kernel="radial", ranges=list(cost=10^(-2:2), gamma=c(.5,1,2)))
-    # results for:status ~ credit.score + Term.num + amount.to.income + Mort.Short.Term.num + 
-    #  amount.to.credit.history + amount + Current.to.Max.Credit + 
-    #  debt.to.max + Rent.Long.Term.num + debt.to.Max.Credit + debt.to.income + 
-    #  debt.to.credit.history + debt
-    #- sampling method: 10-fold cross validation 
-    #  
-    #   - best parameters:
-    #    cost gamma
-    #  1     2
-    #  
-    #  - best performance: 0.2596532 
-    print(svm_tune)
-  }
-  
+
   # show predictions
   h1 <- ggplot(d.train, aes(prediction.svm, fill=as.factor(status))) + 
     geom_density(alpha=0.4, position="identity") + guides(fill=FALSE)
@@ -299,7 +273,7 @@ if (1) {
     geom_line() + geom_point() +
     ggtitle("SVM predictor, balanced testing data") + ylab("Accuracy") + xlab("Predition cut-off")
   
-  ggplot(acc.estimation, aes(x = cutoff, y=acc)) + 
+  ggplot(acc.estimation.unbalanced, aes(x = cutoff, y=acc)) + 
     geom_line() + geom_point() +
     ggtitle("SVM predictor, unbalanced testing data") + ylab("Accuracy") + xlab("Predition cut-off")
 }
@@ -310,24 +284,28 @@ if (1) {
   # training
   system.time(the.glm.model <- glm(the.model.fmla, family=binomial(link='logit'), data=d.train))
   
-  # testing
+  d.train$prediction.glm <- predict(the.glm.model, d.train)
   d.test$prediction.glm <- predict(the.glm.model, d.test)
   d.test.all$prediction.glm <- predict(the.glm.model, d.test.all)
+  acc.estimation.balanced <- acc.curve(d.test, "prediction.glm")
+  acc.estimation.unbalanced <- acc.curve(d.test.all, "prediction.glm")
   
-  # show predictions
-  ggplot(d.test, aes(prediction.glm, fill=as.factor(status))) + 
-    geom_histogram( bins = 100, alpha=0.4, position="identity")
-  ggplot(d.test.all, aes(prediction.glm, fill=as.factor(status))) + 
-    geom_histogram( bins = 100, alpha=0.4, position="identity")
+  # visualize predictions
+  h1 <- ggplot(d.train, aes(prediction.glm, fill=as.factor(status))) + 
+    geom_density(alpha=0.4, position="identity") + guides(fill=FALSE)
+  h2 <- ggplot(d.test, aes(prediction.glm, fill=as.factor(status))) + 
+    geom_density(alpha=0.4, position="identity") + guides(fill=FALSE)
+  h3 <- ggplot(d.test, aes(prediction.glm, fill=as.factor(status))) + 
+    geom_histogram( bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+  h4 <- ggplot(d.test.all, aes(prediction.glm, fill=as.factor(status))) + 
+    geom_histogram( bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+  multiplot(h1, h2, h3, h4, cols = 2)
   
   # building classifier
-  acc.estimation <- acc.curve(d.test, "prediction.glm")
-  ggplot(acc.estimation, aes(x = cutoff, y=acc)) + 
+  ggplot(acc.estimation.balanced, aes(x = cutoff, y=acc)) + 
     geom_line() + geom_point() +
     ggtitle("Logistic predictor, balanced testing data") + ylab("Accuracy") + xlab("Predition cut-off")
-  
-  acc.estimation <- acc.curve(d.test.all, "prediction.glm")
-  ggplot(acc.estimation, aes(x = cutoff, y=acc)) + 
+  ggplot(acc.estimation.unbalanced, aes(x = cutoff, y=acc)) + 
     geom_line() + geom_point() +
     ggtitle("Logistic predictor, unbalanced testing data") + ylab("Accuracy") + xlab("Predition cut-off")
 }
@@ -335,92 +313,54 @@ if (1) {
 ######################################################################################
 # XGBoost predictor
 if (1) {
-  results.train <- vector("list", nrow(dt.xgb.imp))
-  results <- results <- vector("list", nrow(dt.xgb.imp))
-  for(n.features in (2:nrow(dt.xgb.imp))) {
-    print(paste0("Analyse ", n.features, " features"))
-    selected.features <- dt.xgb.imp$Feature[1:n.features]
-    
-    #d.in <- unbalanced.train.data[, selected.features, with=F]
-    #d.out <- as.numeric(unbalanced.train.data[,status])
-    #dtrain <- xgb.DMatrix(data = data.matrix(d.in), label = d.out)
-    
-    d.in <- train.data[, selected.features, with=F]
-    d.out <- as.numeric(train.data[,status])
-    dtrain <- xgb.DMatrix(data = data.matrix(d.in), label = d.out)
-    
-    nTrainiSteps <- 10000
-    scale.factor <- length(d.out[d.out == 0]) / length(d.out[d.out == 1])
-    the.bst.model <- xgb.train(data = dtrain
-                               , max_depth = 6 # default: 6
-                               , eta = 0.1 # default: 0.3
-                               , nthread = 6
-                               , nrounds = nTrainiSteps # default: 500
-                               #, watchlist = watchlist
-                               , objective = "binary:logistic"
-                               #, eval_metric = "auc"  # default: "error" for classification
-                               , lambda = 1 # default: 1.0
-                               
-                               , gamma = 5 # default: 0.0 
-                               , min_child_weight = 10 # default: 1.0
-                               
-                               , subsample = 0.5  # default: 1.0
-                               , colsample_bytree = 0.5  # default: 1.0
-                               
-                               # alleviate imbalanceness in the data
-                               , scale_pos_weight = scale.factor # default: 1
-    )
-    
-    train.data$prediction.xgb <- predict(the.bst.model, dtrain)
-    h0 <- ggplot(train.data, aes(prediction.xgb, fill=as.factor(status))) + 
-      geom_histogram(aes(y=..density..),  bins = 100, alpha=0.4, position="identity")
-    results.train[[n.features]] <- h0
-    
-    d.in <- unbalanced.test.data[, selected.features, with=F]
-    d.out <- as.numeric(unbalanced.test.data[,status])
-    dtest <- xgb.DMatrix(data = data.matrix(d.in), label = d.out)
-    unbalanced.test.data$prediction.xgb <- predict(the.bst.model, dtest)
-    h1 <- ggplot(unbalanced.test.data, aes(prediction.xgb, fill=as.factor(status))) + 
-      geom_histogram(aes(y=..density..),  bins = 100, alpha=0.4, position="identity")
-    h2 <- ggplot(unbalanced.test.data, aes(prediction.xgb, fill=as.factor(status))) + 
-      geom_histogram(bins = 100, alpha=0.4, position="identity")
-    multiplot(h1, h2)
-    results[[n.features]] <- h2
-  }
+  d.in <- train.data[, selected.features.bare, with=F]
+  d.out <- as.numeric(train.data[,status])
+  dtrain <- xgb.DMatrix(data = data.matrix(d.in), label = d.out)
   
-  multiplot(results.train[[2]] + guides(fill=FALSE)
-            , results.train[[3]] + guides(fill=FALSE)
-            , results.train[[4]] + guides(fill=FALSE)
-            , results.train[[5]] + guides(fill=FALSE)
-            , results.train[[6]] + guides(fill=FALSE)
-            , results.train[[7]] + guides(fill=FALSE)
-            , results.train[[8]] + guides(fill=FALSE)
-            , results.train[[9]] + guides(fill=FALSE)
-            , results.train[[10]] + guides(fill=FALSE)
-            , results.train[[11]] + guides(fill=FALSE)
-            , cols = 4
+  nTrainiSteps <- 10000
+  scale.factor <- length(d.out[d.out == 0]) / length(d.out[d.out == 1])
+  the.bst.model <- xgb.train(data = dtrain
+                             , max_depth = 4 # default: 6
+                             , eta = 0.1 # default: 0.3
+                             , nthread = 6
+                             , nrounds = nTrainiSteps # default: 500
+                             , objective = "binary:logistic"
+                             , lambda = 1 # default: 1.0
+                             , gamma = 5 # default: 0.0 
+                             , min_child_weight = 10 # default: 1.0
+                             , subsample = 0.5  # default: 1.0
+                             , colsample_bytree = 0.5  # default: 1.0
+                             , scale_pos_weight = scale.factor # default: 1
   )
+  train.data$prediction.xgb <- predict(the.bst.model, dtrain)
   
-  multiplot(results[[2]] + guides(fill=FALSE)
-            , results[[3]] + guides(fill=FALSE)
-            , results[[4]] + guides(fill=FALSE)
-            , results[[5]] + guides(fill=FALSE)
-            , results[[6]] + guides(fill=FALSE)
-            , results[[7]] + guides(fill=FALSE)
-            , results[[8]] + guides(fill=FALSE)
-            , results[[9]] + guides(fill=FALSE)
-            , results[[10]] + guides(fill=FALSE)
-            , results[[11]] + guides(fill=FALSE)
-            , cols = 4
-  )
+  d.in <- d.test[, selected.features.bare, with=F]
+  d.out <- as.numeric(d.test[,status])
+  dtest <- xgb.DMatrix(data = data.matrix(d.in), label = d.out)
+  d.test$prediction.xgb <- predict(the.bst.model, dtest)
   
-  acc.estimation <- acc.curve(d.test, "prediction.xgb")
-  ggplot(acc.estimation, aes(x = cutoff, y=acc)) + 
+  d.in <- d.test.all[, selected.features.bare, with=F]
+  d.out <- as.numeric(d.test.all[,status])
+  dtest <- xgb.DMatrix(data = data.matrix(d.in), label = d.out)
+  d.test.all$prediction.xgb <- predict(the.bst.model, dtest)
+  
+  acc.estimation.balanced <- acc.curve(d.test, "prediction.xgb")
+  acc.estimation.unbalanced <- acc.curve(d.test.all, "prediction.xgb")
+  
+  h1 <- ggplot(train.data, aes(prediction.xgb, fill=as.factor(status))) + 
+    geom_density(alpha=0.4, position="identity") + guides(fill=FALSE)
+  h2 <- ggplot(d.test, aes(prediction.xgb, fill=as.factor(status))) + 
+    geom_density(alpha=0.4, position="identity") + guides(fill=FALSE)
+  h3 <- ggplot(d.test, aes(prediction.xgb, fill=as.factor(status))) + 
+    geom_histogram( bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+  h4 <- ggplot(d.test.all, aes(prediction.xgb, fill=as.factor(status))) + 
+    geom_histogram( bins = 100, alpha=0.4, position="identity") + guides(fill=FALSE)
+  multiplot(h1, h2, h3, h4, cols = 2)
+  
+  ggplot(acc.estimation.balanced, aes(x = cutoff, y=acc)) + 
     geom_line() + geom_point() +
     ggtitle("XGBoost predictor, balanced testing data") + ylab("Accuracy") + xlab("Predition cut-off")
-  
-  acc.estimation <- acc.curve(d.test.all, "prediction.xgb")
-  ggplot(acc.estimation, aes(x = cutoff, y=acc)) + 
+  ggplot(acc.estimation.unbalanced, aes(x = cutoff, y=acc)) + 
     geom_line() + geom_point() +
     ggtitle("XGBoost predictor, unbalanced testing data") + ylab("Accuracy") + xlab("Predition cut-off")
 }
@@ -459,6 +399,30 @@ if (1) {
   ggplot(acc.estimation.unb, aes(x = cutoff, y=acc, color=as.factor(type))) + 
     geom_line() + geom_point() +
     ggtitle("Unbalanced data") + ylab("Accuracy") + xlab("Predition cut-off")
+  
+  the.trained.model <- the.svm.model
+  the.cut.off <- 0.09
 }
 
+######################################################################################
+# pack the model
+if (1) {
+  outfile <- "Results/MLM_bad_v2.RData"
 
+  the.model <- list()
+  the.model[['the.model']] <- the.trained.model
+  the.model[['the.cutoff']] <- the.cut.off
+  the.model[['the.model.formula']] <- the.model.fmla
+  save(the.model, file = outfile)
+  
+  the.result <- merge(unbalanced.test.data[, .(loan.id, status.str)]
+                      , d.test.all[, .(loan.id, status, prediction.svm)], by="loan.id", all.x=T)
+  the.result[is.na(prediction.svm), prediction.svm := 1]
+  the.result[, status.predicted := "Fully Paid"]
+  the.result[prediction.svm < the.cut.off, status.predicted := "Charged Off"]
+  the.result[, status.str := as.character(status.str)]
+  nrow(the.result[status.str == status.predicted]) / nrow(the.result)
+  
+  write.table(the.result, "data/bad.data.test.tsv", sep="\t", row.names = F)
+  write.table(d.test.all[, c("loan.id", selected.features), with=F], "data/bad.data.model.input.tsv", sep="\t", row.names = F)
+}
