@@ -66,15 +66,14 @@ data.cleansing <- function(in.data) {
   label.wrong.records <- function(amount, income, credit.score) {
     if (1 == length(amount))
       return(TRUE)
-    dt <- data.table(amount = amount, income, credit.score, flag = TRUE)
-    dt$flag
-    dt[amount == 99999999, flag := FALSE]
-    dt[is.na(income) | is.na(credit.score), flag := FALSE]
-    return(dt$flag)
+    flag <- rep(TRUE, length(amount))
+    flag[amount == 99999999 | is.na(income) | is.na(credit.score)] <- FALSE
+    return(flag)
   }
   sel.data[, keep.record := label.wrong.records(amount, income, credit.score), by=.(customer.id)]
   sel.data <- sel.data[T == keep.record]
   sel.data[, keep.record := NULL]
+  sel.data[, N.records := .N, by=.(loan.id)]
   
   if (0) {
     # number of Loan/Customer ID
@@ -111,19 +110,24 @@ data.cleansing <- function(in.data) {
 }
 
 # apply the data cleansing function
-system.time(sel.data <- data.cleansing(raw.data))
+system.time(sel.data <- data.cleansing(copy(raw.data)))
 
-system.time(new.sel.data <- data.cleansing(new.raw.data))
+# fix problem with credit.score >1000
+sel.data[credit.score > 1000, credit.score := credit.score / 10]
 
-test1.data <- fread("data/attept.1.csv")
-
-new.sel.data[, old.rec := 0]
-new.sel.data[loan.id %in% sel.data$loan.id, old.rec := 1]
-
-new.sel.data[, test1.rec := 0]
-new.sel.data[loan.id %in% test1.data$`Loan ID`, test1.rec := 1]
-
-used.for.test <- new.sel.data[, test1.rec == 1]
+if (0) {
+  system.time(new.sel.data <- data.cleansing(copy(new.raw.data)))
+  
+  test1.data <- fread("data/attept.1.csv")
+  
+  new.sel.data[, old.rec := 0]
+  new.sel.data[loan.id %in% sel.data$loan.id, old.rec := 1]
+  
+  new.sel.data[, test1.rec := 0]
+  new.sel.data[loan.id %in% test1.data$`Loan ID`, test1.rec := 1]
+  
+  used.for.test <- new.sel.data[, test1.rec == 1]
+}
 
 # look at the data
 summary(sel.data)
